@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VideoSave – Video aur audio download karein</title>
+<meta name="description" content="Link paste karein, quality chunein aur video ya MP3 download karein.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f9;--ink:#14213d;--sub:#5b6b85;--line:#d5dce6;--acc:#2b4bff;--acc2:#1d38d6;--card:#fff;--err:#c62828}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1426;--ink:#eef2fb;--sub:#97a5c0;--line:#25314d;--card:#141e38;--acc:#5b78ff;--acc2:#7a92ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+header{padding:22px 0;display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+header i{width:30px;height:30px;border-radius:9px;background:var(--acc);display:grid;place-items:center;color:#fff;font-style:normal}
+h1{font-size:clamp(34px,7vw,58px);line-height:1.08;letter-spacing:-.03em;margin:56px 0 14px;font-weight:800}
+.lead{color:var(--sub);font-size:18px;max-width:52ch;margin:0 0 30px}
+.box{display:flex;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:8px}
+.box:focus-within{border-color:var(--acc)}
+input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;padding:12px 14px;outline:none}
+button{font:inherit;font-weight:700;border:0;border-radius:11px;padding:12px 22px;background:var(--acc);color:#fff;cursor:pointer}
+button:hover{background:var(--acc2)}button:disabled{opacity:.6;cursor:wait}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+#msg{min-height:26px;margin:12px 4px;color:var(--err);font-weight:500}
+.result{display:none;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:6px}
+.result.on{display:grid;grid-template-columns:240px 1fr}
+.result img{width:100%;height:100%;object-fit:cover;background:var(--line);min-height:140px}
+.info{padding:20px}
+.info h2{font-size:18px;margin:0 0 4px;line-height:1.35}
+.info p{margin:0 0 16px;color:var(--sub);font-size:14px}
+.q{display:flex;flex-wrap:wrap;gap:8px}
+.q button{background:transparent;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px}
+.q button:hover{border-color:var(--acc);background:transparent;color:var(--acc)}
+.q button.main{background:var(--acc);color:#fff;border-color:var(--acc)}
+.steps{margin:64px 0 40px;display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+.steps div{border-top:2px solid var(--ink);padding-top:12px}
+.steps b{display:block;margin-bottom:4px}.steps span{color:var(--sub);font-size:14px}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--sub);font-size:13px}
+@media(max-width:620px){.result.on{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.box{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><i>↓</i>VideoSave</header>
+<main>
+<h1>Link paste karein.<br>Video ya MP3 payein.</h1>
+<p class="lead">Koi sign-up nahi, koi app nahi. Sirf woh content download karein jo aapka apna ho ya jise download karne ki permission ho.</p>
+<div class="box">
+<input id="url" type="url" placeholder="https://video-ka-link-yahan-paste-karein" aria-label="Video link" autocomplete="off">
+<button id="go">Video dhundhein</button>
+</div>
+<div id="msg" role="alert"></div>
+<section class="result" id="res" aria-live="polite">
+<img id="thumb" alt="Video thumbnail">
+<div class="info"><h2 id="title"></h2><p id="meta"></p><div class="q" id="q"></div></div>
+</section>
+<section class="steps">
+<div><b>1. Link copy karein</b><span>Video ka page link browser se copy karein.</span></div>
+<div><b>2. Paste karke dhundhein</b><span>Upar box mein paste karein aur button dabayein.</span></div>
+<div><b>3. Quality chunein</b><span>Video ki quality ya sirf MP3 audio chunein.</span></div>
+</section>
+</main>
+<footer>Copyright ka dhyan rakhein: sirf apne ya permission-wale content ko download karein. Zyadatar platforms ki Terms of Service bina permission download ki ijazat nahi deti. © VideoSave</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=s=>s?Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0"):"";
+async function search(){
+  const url=$("url").value.trim(), msg=$("msg"), btn=$("go");
+  msg.textContent="";$("res").classList.remove("on");
+  if(!url){msg.textContent="Pehle link paste karein.";return}
+  btn.disabled=true;btn.textContent="Dhundh rahe hain…";
+  try{
+    const r=await fetch("/api/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"Kuch galat hua. Dobara try karein.");
+    $("thumb").src=d.thumbnail||"";$("title").textContent=d.title||"Video";
+    $("meta").textContent=[d.uploader,fmt(d.duration)].filter(Boolean).join(" • ");
+    const q=$("q");q.innerHTML="";
+    const add=(label,val,main)=>{const b=document.createElement("button");b.textContent=label;if(main)b.className="main";
+      b.onclick=()=>{location.href="/api/download?url="+encodeURIComponent(url)+"&q="+val};q.appendChild(b)};
+    add("Best quality","best",true);
+    (d.heights||[]).forEach(h=>add(h+"p MP4",h));
+    add("Sirf MP3","audio");
+    $("res").classList.add("on");
+  }catch(e){msg.textContent=e.message}
+  btn.disabled=false;btn.textContent="Video dhundhein";
+}
+$("go").onclick=search;
+$("url").addEventListener("keydown",e=>{if(e.key==="Enter")search()});
+</script>
+</body>
+</html>
