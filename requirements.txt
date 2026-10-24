@@ -1,0 +1,4 @@
+flask==3.0.3
+flask-limiter==3.8.0
+yt-dlp
+gunicorn==22.0.0
